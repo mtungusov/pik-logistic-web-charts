@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Charts Logistic</title>
+  <link rel="stylesheet" type="text/css" href="assets/css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="assets/css/dc.min.css">
+  <style type="text/css">
+    #zone-chart .filter, #group-chart .filter {
+      display: none;
+    }
+    .dc-chart g.row text {
+      fill: #666;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="row">
+    <div id="zone-chart">
+      <strong>Геозоны</strong>
+      <span class="reset" style="display: none;"><span class="filter"></span></span>
+      <a class="reset" href="javascript:zoneChart.filterAll();dc.redrawAll();" style="display: none;">сброс</a>
+      <div class="clearfix"></div>
+    </div>
+
+    <div id="group-chart">
+      <strong>Группы транспорта</strong>
+      <span class="reset" style="display: none;"><span class="filter"></span></span>
+      <a class="reset" href="javascript:groupChart.filterAll();dc.redrawAll();" style="display: none;">сброс</a>
+      <div class="clearfix"></div>
+    </div>
+  </div>
+  
+  <div class="row">
+    <div id="times-chart">
+      <strong>Суммарное время в зонах</strong>
+    </div>
+  </div>
+
+  <div class="row">
+    <div id="time-in-zones-chart">
+      <strong>Время в зонах</strong>
+    </div>
+  </div>
+</div>
+
+  <script type="text/javascript" src="assets/js/d3.js"></script>
+  <script type="text/javascript" src="assets/js/crossfilter.js"></script>
+  <script type="text/javascript" src="assets/js/dc.min.js"></script>
+
+  <script type="text/javascript" src="assets/js/process.js"></script>
+</body>
+</html>
