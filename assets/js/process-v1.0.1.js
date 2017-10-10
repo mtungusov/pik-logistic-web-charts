@@ -39,9 +39,7 @@ function formatDate(date) {
   return d + '/' + m + '/' + y
 }
 
-// function getKeys(gr) {
-//   gr.forEach(g)
-// }
+const filterIfTime = 60 * 7
 
 d3.tsv('./2017_09.tsv',
   function (d) {
@@ -77,25 +75,64 @@ d3.tsv('./2017_09.tsv',
     var zoneGroup = zoneDim.group().reduceSum(dc.pluck("total_duration_in_min"));
     var groupGroup = groupDim.group().reduceSum(dc.pluck("total_duration_in_min"));
 
-    var timesGroup = dateDim.group().reduceSum(dc.pluck("total_duration_in_min"));
+    // var timesGroup = dateDim.group().reduceSum(dc.pluck("total_duration_in_min"));
+    let timesAvgGroup = dateDim.group().reduce(
+      function (p, v) { //Add
+        if (v.total_duration_in_min < filterIfTime ) {
+          ++p.count
+          p.total += v.total_duration_in_min
+          p.avg = Math.round(p.total / p.count)
+        }
+        return p
+      },
+      function (p, v) { //Remove
+        if (v.total_duration_in_min < filterIfTime) {
+          --p.count
+          p.total -= v.total_duration_in_min
+          p.avg = p.count > 0 ? Math.round(p.total / p.count) : 0
+        }
+        return p
+      },
+      function () { //Init
+        return {total: 0, count: 0, avg: 0}
+      }
+    )
     var minDate = dateDim.bottom(1)[0].in_date;
     var maxDate = dateDim.top(1)[0].in_date;
-
-    // let zone0_key = zoneGroup.all()[0].key;
-    // let zone1_key = zoneGroup.all()[1].key;
-    // let zone2_key = zoneGroup.all()[2].key;
-    // let zone3_key = zoneGroup.all()[3].key;
-    // let zone4_key = zoneGroup.all()[4].key;
-
+    
     let zone_keys = zoneGroup.all().map(function (k) {
       return k.key
     });
 
-    let zones = zone_keys.map(function (k) {
-      return dateDim.group().reduceSum(function (d) {
-        let res = d.zone_label == k ? d.total_duration_in_min : 0
-        return res
-      })
+    // let zones = zone_keys.map(function (k) {
+    //   return dateDim.group().reduceSum(function (d) {
+    //     let res = d.zone_label == k ? d.total_duration_in_min : 0
+    //     return res
+    //   })
+    // });
+
+    let zonesAvg = zone_keys.map(function (k) {
+      return dateDim.group().reduce(
+        function (p, v) {
+          if (v.zone_label == k && v.total_duration_in_min < filterIfTime) {
+            ++p.count
+            p.total += v.total_duration_in_min
+            p.avg = Math.round(p.total / p.count)
+          }
+          return p
+        },
+        function (p, v) {
+          if (v.zone_label == k && v.total_duration_in_min < filterIfTime) {
+            --p.count
+            p.total -= v.total_duration_in_min
+            p.avg = p.count > 0 ? Math.round(p.total / p.count) : 0
+          }
+          return p
+        },
+        function () {
+          return {total: 0, count: 0, avg: 0}
+        }
+      )
     });
 
     zoneChart
@@ -116,29 +153,21 @@ d3.tsv('./2017_09.tsv',
       .elasticX(true)
       .xAxis().ticks(0)
 
-    // timesChart
-    //   .height(150)
-    //   .width(900)
-    //   .margins({top: 10, right: 20, bottom: 20, left: 65})
-    //   .dimension(dateDim)
-    //   .group(timesGroup)
-    //   .centerBar(true)
-    //   .x(d3.time.scale().domain([minDate, maxDate]))
-    //   .renderHorizontalGridLines(true)
-    //   .elasticY(true)
-    //   .yAxis().ticks(3)
-
     timesChart
       .height(150)
       .width(900)
       .margins({top: 20, right: 20, bottom: 20, left: 65})
       .dimension(dateDim)
-      .group(timesGroup)
+      .group(timesAvgGroup)
       .x(d3.time.scale().domain([minDate, maxDate]))
       .renderHorizontalGridLines(true)
       .elasticY(true)
       .yAxis().ticks(3)
-
+    
+    timesChart.valueAccessor(function (d) {
+      return d.value.avg
+    })
+    
     timesChart.xAxis().tickFormat(function (v) {
       return formatDate(v)
     })
@@ -147,18 +176,24 @@ d3.tsv('./2017_09.tsv',
       return minutesToString(v)
     })
 
-    // let timeZonesBarCharts = zone_keys.map(function (z, i) {
-    //   return dc.barChart(timeInZonesChart)
+    // let timeZonesLineCharts = zone_keys.map(function (z, i) {
+    //   return dc.lineChart(timeInZonesChart)
     //     .group(zones[i], z)
-    //     .centerBar(true)
     //     .colors(chartColors[i])
-    //     .gap(1)
     // })
 
-    let timeZonesLineCharts = zone_keys.map(function (z, i) {
-      return dc.lineChart(timeInZonesChart)
-        .group(zones[i], z)
+    let timeAvgZonesLineCharts = zone_keys.map(function (z, i) {
+      let ch = dc.lineChart(timeInZonesChart)
+        .group(zonesAvg[i], z)
         .colors(chartColors[i])
+        .renderArea(false)
+      ch.valueAccessor(function (d) {
+        return d.value.avg
+      })
+      // ch.title(function (d) {
+      //   return d.value.avg
+      // })
+      return ch
     })
 
     timeInZonesChart
@@ -168,7 +203,9 @@ d3.tsv('./2017_09.tsv',
       .dimension(dateDim)
       .rangeChart(timesChart)
       .brushOn(false)
-      .compose(timeZonesLineCharts)
+      .renderTitle(false)
+      // .compose(timeZonesLineCharts)
+      .compose(timeAvgZonesLineCharts)
       // .compose([timeLineChart0, timeLineChart1, timeLineChart2, timeLineChart3])
       // .shareColors(true)
       // .group(zones[0], zone_keys[0])
@@ -188,6 +225,10 @@ d3.tsv('./2017_09.tsv',
     timeInZonesChart.yAxis().tickFormat(function (v) {
       return minutesToString(v)
     })
+    
+    // timeInZonesChart.title(function (d) {
+    //   return 'test' + d.key
+    // })
 
     // timeInZonesChart
     //   .on('renderlet', function(chart){

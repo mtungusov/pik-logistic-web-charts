@@ -13,6 +13,9 @@
     .dc-chart g.row text {
       fill: #666;
     }
+    .dc-chart g.row rect.selected + text {
+      fill: red;
+    }
   </style>
 </head>
 <body>
@@ -35,13 +38,13 @@
 
   <div class="row">
     <div id="times-chart">
-      <strong>Суммарное время в зонах</strong>
+      <strong>Среднее время в зонах</strong>
     </div>
   </div>
 
   <div class="row">
     <div id="time-in-zones-chart">
-      <strong>Время в зонах</strong>
+      <strong>Среднее время в зонах</strong>
     </div>
   </div>
 </div>
