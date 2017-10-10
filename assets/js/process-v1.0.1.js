@@ -28,7 +28,7 @@ function minutesToString(m) {
     let hours = Math.floor((_m % oneD)/oneH)
     let minutes = pad((_m % oneD) % oneH)
     let result = hours > 0 ? pad(hours) + ':' + minutes : '00:' + minutes
-    return days > 0 ? pad(days) + 'д.' + result : result
+    return days > 0 ? days + 'д.' + result : result
   }
 }
 
@@ -72,8 +72,10 @@ d3.tsv('./2017_09.tsv',
       return d.group_title
     });
 
-    var zoneGroup = zoneDim.group();
-    var groupGroup = groupDim.group();
+    // var zoneGroup = zoneDim.group();
+    // var groupGroup = groupDim.group();
+    var zoneGroup = zoneDim.group().reduceSum(dc.pluck("total_duration_in_min"));
+    var groupGroup = groupDim.group().reduceSum(dc.pluck("total_duration_in_min"));
 
     var timesGroup = dateDim.group().reduceSum(dc.pluck("total_duration_in_min"));
     var minDate = dateDim.bottom(1)[0].in_date;
@@ -84,18 +86,18 @@ d3.tsv('./2017_09.tsv',
     // let zone2_key = zoneGroup.all()[2].key;
     // let zone3_key = zoneGroup.all()[3].key;
     // let zone4_key = zoneGroup.all()[4].key;
-    
+
     let zone_keys = zoneGroup.all().map(function (k) {
       return k.key
     });
-    
+
     let zones = zone_keys.map(function (k) {
       return dateDim.group().reduceSum(function (d) {
         let res = d.zone_label == k ? d.total_duration_in_min : 0
         return res
       })
     });
-    
+
     zoneChart
       .height(400)
       .margins({top: 10, right: 0, bottom: 20, left: 5})
@@ -125,7 +127,7 @@ d3.tsv('./2017_09.tsv',
     //   .renderHorizontalGridLines(true)
     //   .elasticY(true)
     //   .yAxis().ticks(3)
-    
+
     timesChart
       .height(150)
       .width(900)
@@ -136,15 +138,15 @@ d3.tsv('./2017_09.tsv',
       .renderHorizontalGridLines(true)
       .elasticY(true)
       .yAxis().ticks(3)
-    
+
     timesChart.xAxis().tickFormat(function (v) {
       return formatDate(v)
     })
-  
+
     timesChart.yAxis().tickFormat(function (v) {
       return minutesToString(v)
     })
-    
+
     // let timeZonesBarCharts = zone_keys.map(function (z, i) {
     //   return dc.barChart(timeInZonesChart)
     //     .group(zones[i], z)
@@ -152,13 +154,13 @@ d3.tsv('./2017_09.tsv',
     //     .colors(chartColors[i])
     //     .gap(1)
     // })
-    
+
     let timeZonesLineCharts = zone_keys.map(function (z, i) {
       return dc.lineChart(timeInZonesChart)
         .group(zones[i], z)
         .colors(chartColors[i])
     })
-    
+
     timeInZonesChart
       .height(600)
       .width(900)
@@ -178,7 +180,7 @@ d3.tsv('./2017_09.tsv',
       .elasticY(true)
       .legend(dc.legend().x(70).y(20).itemHeight(13).gap(2))
       .yAxis().ticks(6)
-  
+
     timeInZonesChart.xAxis().tickFormat(function (v) {
       return formatDate(v)
     })
@@ -186,14 +188,14 @@ d3.tsv('./2017_09.tsv',
     timeInZonesChart.yAxis().tickFormat(function (v) {
       return minutesToString(v)
     })
-    
+
     // timeInZonesChart
     //   .on('renderlet', function(chart){
     //     zone_keys.forEach(function (_, i) {
     //       chart.selectAll('g._' + i).attr("transform", "translate(" + i + ", 0)")
     //     })
     //   })
-    
+
     dc.renderAll();
 
     // console.log(zones[0]);
