@@ -182,20 +182,33 @@ d3.tsv('./2017_09.tsv',
     //     .colors(chartColors[i])
     // })
 
-    let timeAvgZonesLineCharts = zone_keys.map(function (z, i) {
-      let ch = dc.lineChart(timeInZonesChart)
+    // let timeAvgZonesLineCharts = zone_keys.map(function (z, i) {
+    //   let ch = dc.lineChart(timeInZonesChart)
+    //     .group(zonesAvg[i], z)
+    //     .colors(chartColors[i])
+    //     .renderArea(false)
+    //   ch.valueAccessor(function (d) {
+    //     return d.value.avg
+    //   })
+    //   // ch.title(function (d) {
+    //   //   return d.value.avg
+    //   // })
+    //   return ch
+    // })
+  
+    let timeZonesBarCharts = zone_keys.map(function (z, i) {
+      let ch = dc.barChart(timeInZonesChart)
         .group(zonesAvg[i], z)
+        .centerBar(true)
         .colors(chartColors[i])
-        .renderArea(false)
+        .gap(1)
       ch.valueAccessor(function (d) {
         return d.value.avg
       })
-      // ch.title(function (d) {
-      //   return d.value.avg
-      // })
       return ch
     })
-
+  
+  
     timeInZonesChart
       .height(600)
       .width(900)
@@ -204,8 +217,8 @@ d3.tsv('./2017_09.tsv',
       .rangeChart(timesChart)
       .brushOn(false)
       .renderTitle(false)
-      // .compose(timeZonesLineCharts)
-      .compose(timeAvgZonesLineCharts)
+      .compose(timeZonesBarCharts)
+      // .compose(timeAvgZonesLineCharts)
       // .compose([timeLineChart0, timeLineChart1, timeLineChart2, timeLineChart3])
       // .shareColors(true)
       // .group(zones[0], zone_keys[0])
